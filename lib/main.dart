@@ -6,6 +6,14 @@ void main() {
   runApp(const MyApp());
 }
 
+//  COLOR SYSTEM
+const primary = Color(0xFF0058BE);
+const primaryLight = Color(0xFF2170E4);
+const surface = Color(0xFFF9F9FF);
+const surfaceLow = Color(0xFFF2F3FD);
+const textPrimary = Color(0xFF191B23);
+const success = Color(0xFF006947);
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -14,10 +22,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'ToDo App',
-      theme: ThemeData(
-        primaryColor: const Color.fromARGB(255, 72, 45, 36),
-        scaffoldBackgroundColor: Colors.yellow[50],
-      ),
+      theme: ThemeData(scaffoldBackgroundColor: surface, fontFamily: 'Inter'),
       home: const TodoPage(),
     );
   }
@@ -39,23 +44,19 @@ class _TodoPageState extends State<TodoPage> {
     loadData();
   }
 
-  // SAVE
   void saveData() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> data = todos.map((e) => jsonEncode(e)).toList();
-    prefs.setStringList('todos', data);
+    prefs.setStringList('todos', todos.map((e) => jsonEncode(e)).toList());
   }
 
-  // LOAD
   void loadData() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String>? data = prefs.getStringList('todos');
+    final data = prefs.getStringList('todos');
 
     if (data != null) {
       setState(() {
         todos = data.map((e) {
           final item = Map<String, dynamic>.from(jsonDecode(e));
-
           return {
             "title": item["title"] ?? "",
             "description": item["description"] ?? "",
@@ -67,19 +68,6 @@ class _TodoPageState extends State<TodoPage> {
     }
   }
 
-  // SORT
-  void sortTodos() {
-    todos.sort((a, b) {
-      if (a["dueDate"] == null) return 1;
-      if (b["dueDate"] == null) return -1;
-
-      DateTime da = DateTime.parse(a["dueDate"]);
-      DateTime db = DateTime.parse(b["dueDate"]);
-      return da.compareTo(db);
-    });
-  }
-
-  // TOGGLE
   void toggleTodo(int index) {
     setState(() {
       todos[index]["isDone"] = !todos[index]["isDone"];
@@ -87,7 +75,6 @@ class _TodoPageState extends State<TodoPage> {
     saveData();
   }
 
-  // DELETE
   void deleteTodo(int index) {
     setState(() {
       todos.removeAt(index);
@@ -95,164 +82,164 @@ class _TodoPageState extends State<TodoPage> {
     saveData();
   }
 
-  // EDIT
   void editTodo(int index) {
-    TextEditingController editTitle = TextEditingController(
+    TextEditingController t = TextEditingController(
       text: todos[index]["title"],
     );
-    TextEditingController editDesc = TextEditingController(
+    TextEditingController d = TextEditingController(
       text: todos[index]["description"],
     );
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
+        backgroundColor: surfaceLow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("แก้ไขงาน"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: editTitle),
+            TextField(controller: t),
             const SizedBox(height: 10),
-            TextField(controller: editDesc),
+            TextField(controller: d),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               setState(() {
-                todos[index]["title"] = editTitle.text;
-                todos[index]["description"] = editDesc.text;
+                todos[index]["title"] = t.text;
+                todos[index]["description"] = d.text;
               });
               saveData();
               Navigator.pop(context);
             },
-            child: const Text("บันทึก"),
+            child: const Text("บันทึก", style: TextStyle(color: primary)),
           ),
         ],
       ),
     );
   }
 
-  // ITEM UI
-  Widget buildItem(Map<String, dynamic> todo, int index) {
-    return Card(
-      color: Colors.yellow[100],
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        leading: Checkbox(
-          value: todo["isDone"],
-          activeColor: const Color.fromARGB(255, 72, 45, 36),
-          onChanged: (_) => toggleTodo(index),
-        ),
-        title: Text(
-          todo["title"] ?? "",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            decoration: todo["isDone"] ? TextDecoration.lineThrough : null,
+  Widget buildCard(Map todo, int index) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: surfaceLow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Checkbox(
+            value: todo["isDone"],
+            activeColor: success,
+            onChanged: (_) => toggleTodo(index),
           ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if ((todo["description"] ?? "").isNotEmpty)
-              Text(todo["description"]),
-            if (todo["dueDate"] != null &&
-                todo["dueDate"].toString().isNotEmpty)
-              Text(
-                " ${todo["dueDate"].toString().split(' ')[0]}",
-                style: const TextStyle(color: Color.fromARGB(255, 72, 45, 36)),
-              ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.blue),
-              onPressed: () => editTodo(index),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  todo["title"],
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: textPrimary,
+                    decoration: todo["isDone"]
+                        ? TextDecoration.lineThrough
+                        : null,
+                  ),
+                ),
+                if ((todo["description"] ?? "").isNotEmpty)
+                  Text(todo["description"]),
+                if (todo["dueDate"] != null)
+                  Text(
+                    " ${todo["dueDate"].toString().split(' ')[0]}",
+                    style: const TextStyle(color: primary),
+                  ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(
-                Icons.delete,
-                color: Color.fromARGB(255, 90, 0, 0),
-              ),
-              onPressed: () => deleteTodo(index),
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: primary),
+            onPressed: () => editTodo(index),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => deleteTodo(index),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    sortTodos();
+    final pending = todos.where((t) => !t["isDone"]).toList();
+    final done = todos.where((t) => t["isDone"]).toList();
 
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: surface,
         title: const Text(
-          "📋 To-Do List",
-          style: TextStyle(color: Colors.white),
+          "To-Do List",
+          style: TextStyle(
+            color: textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: const Color.fromARGB(255, 72, 45, 36),
-        centerTitle: true,
       ),
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 72, 45, 36),
-        child: const Icon(Icons.add, color: Colors.white),
-        onPressed: () async {
+      floatingActionButton: GestureDetector(
+        onTap: () async {
           final newTodo = await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddTodoPage()),
           );
 
           if (newTodo != null) {
-            setState(() {
-              todos.add(newTodo);
-            });
+            setState(() => todos.add(newTodo));
             saveData();
           }
         },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [primary, primaryLight]),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
 
       body: ListView(
         children: [
           const Padding(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(16),
             child: Text(
-              "⏳ งานที่ยังไม่เสร็จ",
+              " งานที่ยังไม่เสร็จ",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-
-          ...todos.where((t) => !t["isDone"]).map((todo) {
-            int index = todos.indexOf(todo);
-            return buildItem(todo, index);
-          }),
-
-          const Divider(),
-
+          ...pending.map((e) => buildCard(e, todos.indexOf(e))),
           const Padding(
-            padding: EdgeInsets.all(8),
+            padding: EdgeInsets.all(16),
             child: Text(
-              "✅ งานที่เสร็จแล้ว",
+              " งานที่เสร็จแล้ว",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-
-          ...todos.where((t) => t["isDone"]).map((todo) {
-            int index = todos.indexOf(todo);
-            return buildItem(todo, index);
-          }),
+          ...done.map((e) => buildCard(e, todos.indexOf(e))),
         ],
       ),
     );
   }
 }
 
-// หน้าเพิ่มงาน
+// ADD PAGE
 class AddTodoPage extends StatefulWidget {
   const AddTodoPage({super.key});
 
@@ -261,33 +248,17 @@ class AddTodoPage extends StatefulWidget {
 }
 
 class _AddTodoPageState extends State<AddTodoPage> {
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descController = TextEditingController();
-  DateTime? selectedDate;
-
-  void pickDate() async {
-    DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
-  }
+  TextEditingController title = TextEditingController();
+  TextEditingController desc = TextEditingController();
+  DateTime? date;
 
   void save() {
-    if (titleController.text.isEmpty) return;
-
+    if (title.text.isEmpty) return;
     Navigator.pop(context, {
-      "title": titleController.text,
-      "description": descController.text,
+      "title": title.text,
+      "description": desc.text,
       "isDone": false,
-      "dueDate": selectedDate?.toString(),
+      "dueDate": date?.toString(),
     });
   }
 
@@ -295,63 +266,51 @@ class _AddTodoPageState extends State<AddTodoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("เพิ่มงาน", style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color.fromARGB(255, 72, 45, 36),
+        backgroundColor: surface,
+        elevation: 0,
+        title: const Text("เพิ่มงาน", style: TextStyle(color: textPrimary)),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: "ชื่องาน",
-                border: OutlineInputBorder(),
-              ),
+              controller: title,
+              decoration: const InputDecoration(labelText: "ชื่องาน"),
             ),
             const SizedBox(height: 10),
-
             TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: "รายละเอียด",
-                border: OutlineInputBorder(),
-              ),
+              controller: desc,
+              decoration: const InputDecoration(labelText: "รายละเอียด"),
             ),
-            const SizedBox(height: 10),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  selectedDate == null
-                      ? "ยังไม่ได้เลือกวัน"
-                      : "${selectedDate!.toString().split(' ')[0]}",
-                ),
-                ElevatedButton(
-                  onPressed: pickDate,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 72, 45, 36),
-                  ),
-                  child: const Text(
-                    "เลือกวัน",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-
             const SizedBox(height: 20),
-
             ElevatedButton(
-              onPressed: save,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 72, 45, 36),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text(
-                "บันทึก",
-                style: TextStyle(color: Colors.white),
+              onPressed: () async {
+                date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                setState(() {});
+              },
+              child: const Text("เลือกวัน"),
+            ),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: save,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [primary, primaryLight],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text("บันทึก", style: TextStyle(color: Colors.white)),
+                ),
               ),
             ),
           ],
