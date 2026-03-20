@@ -1,16 +1,12 @@
-# todo_application
+# 📋 To-Do List Application
 
-A new Flutter project.
+แอปพลิเคชันสำหรับจัดการรายการงานในชีวิตประจำวัน สามารถเพิ่ม แก้ไข ลบ และติดตามสถานะของงานได้ โดยข้อมูลจะถูกบันทึกลงในเครื่องและยังคงอยู่แม้ปิดแอปแล้ว
 
-## Getting Started
+##  ฟีเจอร์หลัก
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+*  เพิ่มรายการงาน
+*  แก้ไขรายการงาน
+*  ลบรายการงาน
+*  ติ๊กเพื่อทำเครื่องหมายว่าเสร็จแล้ว (พร้อมขีดทับ)
+*  กำหนดวันส่ง (Deadline)
+*  แยกแสดงงานที่ยังไม่เสร็จ และงานที่เสร็จแล้ว
